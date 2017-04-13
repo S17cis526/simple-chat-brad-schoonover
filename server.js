@@ -1,13 +1,40 @@
-const PORT = 3000;
+const PORT = 5000;
 
 var fs = require('fs');
 var http = require('http');
 var server = new http.Server(handleRequest);
+var io = require('socket.io')(server);
+
+var connected = 0;
+
+io.on('connection', function(socket)
+{
+  var name = 'User ' + connected;
+  var color = 'black';
+  socket.on('message', function(text)
+  {
+    io.emit('message', {
+      user: name,
+      text: text,
+      color: color});
+  });
+
+  socket.on('color', function(newColor)
+  {
+    color = newColor
+  })
+
+  console.log("A user!");
+  connected++;
+  socket.emit('welcome', {message: "Welcome " + connected + "!"})
+});
+
+
 
 function handleRequest(req, res) {
   switch(req.url) {
     case '/':
-    case 'index.html':
+    case '/index.html':
       fs.readFile('public/index.html', function(err, data){
         if(err){
           res.setHeader("Content-Type", "text/html");
@@ -15,7 +42,7 @@ function handleRequest(req, res) {
         }
       });
       break;
-    case 'simple-chat.css':
+    case '/simple-chat.css':
       fs.readFile('public/simple-chat', function(err, data){
         if(err){
           res.setHeader("Content-Type", "text/css");
@@ -23,7 +50,7 @@ function handleRequest(req, res) {
         }
       });
       break;
-    case 'simple-chat.js':
+    case '/simple-chat.js':
       fs.readFile('public/simple-chat.js', function(err, data){
         if(err){
           res.setHeader("Content-Type", "text/js");
